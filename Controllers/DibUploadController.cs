@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -29,17 +30,44 @@ namespace web2.Controllers
                 return;
             
             string filePath = Path.GetFileNameWithoutExtension(formFile.FileName) + "/" + formFile.FileName;
+            string directoryPath = Path.GetDirectoryName(filePath);
 
-            System.Console.WriteLine(filePath);
+            createDirectoryIfDoesntExist(directoryPath);
+            clearDirectory(directoryPath);
+            saveUploadedRepoZip(formFile, filePath);
+            extractRepoZip(filePath, directoryPath);
+            removeCompressedFile(filePath);
+        }
+
+        void createDirectoryIfDoesntExist(string directoryPath)
+        {
+            if (!Directory.Exists(directoryPath))
+                Directory.CreateDirectory(directoryPath);
+        }
+
+        void clearDirectory(string consideredDirectoryPath)
+        {
+            foreach (string filePath in Directory.GetFiles(consideredDirectoryPath))
+                System.IO.File.Delete(filePath);
+            foreach (string directoryPath in Directory.GetDirectories(consideredDirectoryPath))
+                Directory.Delete(directoryPath, true);
+        }
+
+        void saveUploadedRepoZip(IFormFile formFile, string filePath)
+        {
             using (FileStream stream = new FileStream(filePath, FileMode.Create))
                 formFile.CopyTo(stream);
         }
 
-        void createDirectoryIfDoesntExist(string filePath)
+        void extractRepoZip(string filePath, string directoryPath)
         {
-            string directoryPath = Path.GetDirectoryName(filePath);
-            if (!Directory.Exists(directoryPath))
-                Directory.CreateDirectory(directoryPath);
+            string extractPath = directoryPath;
+            ZipFile.ExtractToDirectory(filePath, extractPath);
+        }
+
+        void removeCompressedFile(string filePath)
+        {
+            System.IO.File.Delete(filePath);
         }
     }
 }
