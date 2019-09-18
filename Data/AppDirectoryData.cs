@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 
 namespace web2.Data
 {
     class AppDirectoryData
     {
         const string MASTER_REPO_ID = "master";
-        const string PATH_TO_APP_DIRECTORIES = "AppRepos";
-        static Dictionary<string, int> currentVersions = new Dictionary<string, int>();
+        public const string PATH_TO_APP_DIRECTORIES = "AppRepos";
 
         string appName;
 
@@ -20,9 +18,9 @@ namespace web2.Data
         public AppDirectoryData(string appName)
         {
             this.appName = appName;
-            if (!currentVersions.ContainsKey(appName))
+            if (!AppVersionHandler.ContainsApp(appName))
             {
-                currentVersions.Add(appName, 0);
+                AppVersionHandler.SetVersion(appName, 0);
                 Directory.CreateDirectory(GetAppDirectoryPath());
                 Directory.CreateDirectory(GetMasterRepoPath());
             }
@@ -30,7 +28,8 @@ namespace web2.Data
 
         public void IncreaseCurrentVersion()
         {
-            currentVersions[appName]++;
+            int currentVersion = AppVersionHandler.GetVersion(appName);
+            AppVersionHandler.SetVersion(appName, currentVersion + 1);
         }
 
         public string GetAppDirectoryPath()
@@ -40,7 +39,7 @@ namespace web2.Data
 
         public string GetCurrentVersionRepoPath()
         {
-            return $"{PATH_TO_APP_DIRECTORIES}/{appName}/{currentVersions[appName]}";
+            return $"{PATH_TO_APP_DIRECTORIES}/{appName}/{AppVersionHandler.GetVersion(appName)}";
         }
 
         public string GetMasterRepoPath()
