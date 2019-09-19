@@ -51,8 +51,12 @@ namespace web2.Controllers
         [HttpGet("{appName}/{targetVersion}/{clientVersion}")]
         public IActionResult DownladRepo(string appName, int targetVersion, int clientVersion)
         {
-            UpdateDownloadBuilder.PrepareDownload(appName, clientVersion, targetVersion);
-            return Ok(new {});
+            string repoZipName = $"{appName}.zip";
+
+            UpdateDownloadBuilder updateDownloadBuilder = new UpdateDownloadBuilder();
+            FileStream fileStream = updateDownloadBuilder.GetUpdatePack(appName, clientVersion, targetVersion);
+
+            return getResult(fileStream, repoZipName);
         }
     }
 }

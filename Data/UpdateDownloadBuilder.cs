@@ -7,47 +7,55 @@ using System.Security.Cryptography;
 
 namespace web2.Data
 {
-    static class UpdateDownloadBuilder
+    class UpdateDownloadBuilder
     {
-        public static void PrepareDownload(string appName, int clientVersion, int targetVersion)
+        const string DIBRM_FILE_NAME = ".dibrm";
+
+        string appName;
+        string clientRepoPath;
+        string targetRepoPath;
+        int clientVersion;
+        int targetVersion;
+        string clientGuid;
+
+        public FileStream GetUpdatePack(string appName, int clientVersion, int targetVersion)
         {
-            if (clientVersion < targetVersion)
-                prepareUpdatePack(appName, clientVersion, targetVersion);
-            else
-                ;
+            this.appName = appName;
+            this.clientVersion = clientVersion;
+            this.targetVersion = targetVersion;
+            clientRepoPath = getRepoPath(clientVersion);
+            targetRepoPath = getRepoPath(targetVersion);
+
+            generateClientGuid();
+            prepareUpdatePack();
+
+            FileStream updatePackStream = new FileStream(getZipPath(), FileMode.Open, FileAccess.Read, FileShare.Delete);
+            File.Delete(getZipPath());
+            return updatePackStream;
         }
 
-        static void prepareUpdatePack(string appName, int clientVersion, int targetVersion)
-        {
-            string clientRepoPath = getRepoPath(appName, clientVersion);
-            string targetRepoPath = getRepoPath(appName, targetVersion);
-            List<string> clientVersionPaths = getRepoPaths(appName, clientVersion);
-            List<string> targetVersionPaths = getRepoPaths(appName, targetVersion);
-
-            var removedFilesPaths = clientVersionPaths.Except(targetVersionPaths);
-            var newFilesPaths = targetVersionPaths.Except(clientVersionPaths);
-            List<string> modifiedFilesPaths = getModifiedFilesPaths(clientVersionPaths, targetVersionPaths, clientRepoPath, targetRepoPath);
-
-            System.Console.WriteLine("REMOVED");
-            foreach (string path in removedFilesPaths)
-                System.Console.WriteLine(path);
-            System.Console.WriteLine("NW");
-            foreach (string path in newFilesPaths)
-                System.Console.WriteLine(path);
-            System.Console.WriteLine("MODIFIED");
-            foreach (string path in modifiedFilesPaths)
-                System.Console.WriteLine(path);
-        }
-
-        static string getRepoPath(string appName, int version)
+        string getRepoPath(int version)
         {
             AppDirectoryData appDirectoryData = new AppDirectoryData(appName);
             return appDirectoryData.GetVersionRepoPath(version);
         }
 
-        static List<string> getRepoPaths(string appName, int version)
+        void prepareUpdatePack()
         {
-            string repoPath = getRepoPath(appName, version);
+            List<string> clientVersionPaths = getRepoPaths(clientVersion);
+            List<string> targetVersionPaths = getRepoPaths(targetVersion);
+
+            List<string> removedFilesPaths = new List<string>(clientVersionPaths.Except(targetVersionPaths));
+            List<string> newFilesPaths = new List<string>(targetVersionPaths.Except(clientVersionPaths));
+            List<string> modifiedFilesPaths = getModifiedFilesPaths(clientVersionPaths, targetVersionPaths);
+
+            prepareDownloadDirectory(modifiedFilesPaths, newFilesPaths, removedFilesPaths);
+            compressUpdatePack();
+        }
+
+        List<string> getRepoPaths(int version)
+        {
+            string repoPath = getRepoPath(version);
 
             List<string> fullPaths = new List<string>(Directory.GetFiles(repoPath, "*", SearchOption.AllDirectories));
             List<string> output = new List<string>();
@@ -57,7 +65,7 @@ namespace web2.Data
             return output;
         }
 
-        static List<string> getModifiedFilesPaths(List<string> clientVersionPaths, List<string> targetVersionPaths, string clientRepoPath, string targetRepoPath)
+        List<string> getModifiedFilesPaths(List<string> clientVersionPaths, List<string> targetVersionPaths)
         {
             List<string> modifiedFilesPaths = new List<string>();
 
@@ -75,7 +83,7 @@ namespace web2.Data
             return modifiedFilesPaths;
         }
 
-        static bool areFilesSame(string path1, string path2)
+        bool areFilesSame(string path1, string path2)
         {
             string hash1;
             string hash2;
@@ -89,6 +97,60 @@ namespace web2.Data
             }
 
             return hash1 == hash2;
+        }
+
+        void prepareDownloadDirectory(List<string> modifiedFilesPaths, List<string> newFilesPaths, List<string> removedFilesPaths)
+        {
+            createDownloadDirectory();
+            createDIBRMFile(removedFilesPaths);
+            addFilesToSend(modifiedFilesPaths, newFilesPaths);
+        }
+
+        void generateClientGuid()
+        {
+            string guid = Guid.NewGuid().ToString();
+            while (Directory.Exists($"{AppDirectoryData.PATH_TO_APP_DOWNLOADS}/{guid}"))
+                guid = Guid.NewGuid().ToString();
+
+            clientGuid = guid;
+        }
+
+        void createDownloadDirectory()
+        {
+            Directory.CreateDirectory(getDownloadDirectoryPath());
+        }
+
+        string getDownloadDirectoryPath()
+        {
+            return $"{AppDirectoryData.PATH_TO_APP_DOWNLOADS}/{clientGuid}";
+        }
+
+        void createDIBRMFile(List<string> removedFilesPaths)
+        {
+            string DIBRMFilePath = $"{getDownloadDirectoryPath()}/{DIBRM_FILE_NAME}";
+            File.WriteAllLines(DIBRMFilePath, removedFilesPaths);
+        }
+
+        void addFilesToSend(List<string> modifiedFilesPaths, List<string> newFilesPaths)
+        {
+            moveFilesToDownloadDirectory(modifiedFilesPaths, targetRepoPath);
+            moveFilesToDownloadDirectory(newFilesPaths, targetRepoPath);
+        }
+
+        void moveFilesToDownloadDirectory(List<string> paths, string sourceDirectoryPath)
+        {
+            foreach (string path in paths)
+                File.Copy($"{sourceDirectoryPath}/{path}", $"{getDownloadDirectoryPath()}/{path}");
+        }
+
+        void compressUpdatePack()
+        {
+            ZipFile.CreateFromDirectory(getDownloadDirectoryPath(), $"{AppDirectoryData.PATH_TO_APP_DOWNLOADS}/{clientGuid}.zip");
+        }
+
+        string getZipPath()
+        {
+            return $"{AppDirectoryData.PATH_TO_APP_DOWNLOADS}/{clientGuid}.zip";
         }
     }
 }
