@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.IO;
 using System.IO.Compression;
 using web2.Data;
@@ -45,6 +46,13 @@ namespace web2.Controllers
 
             FileStream fileStream = createZipInMemory(appVersionRepoPath, repoZipPath);
             return getResult(fileStream, repoZipName);
+        }
+
+        [HttpGet("{appName}/{targetVersion}/{clientVersion}")]
+        public IActionResult DownladRepo(string appName, int targetVersion, int clientVersion)
+        {
+            UpdateDownloadBuilder.PrepareDownload(appName, clientVersion, targetVersion);
+            return Ok(new {});
         }
     }
 }
