@@ -18,6 +18,11 @@ namespace web2.Data
         int targetVersion;
         string clientGuid;
 
+        public FileStream GetUpdatePack(string appName, int clientVersion)
+        {
+            return GetUpdatePack(appName, clientVersion, AppVersionHandler.GetVersion(appName));
+        }
+
         public FileStream GetUpdatePack(string appName, int clientVersion, int targetVersion)
         {
             this.appName = appName;

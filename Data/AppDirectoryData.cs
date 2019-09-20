@@ -22,9 +22,11 @@ namespace web2.Data
         public AppDirectoryData(string appName)
         {
             this.appName = appName;
+
+            const int INIT_VERSION = -1;
             if (!AppVersionHandler.ContainsApp(appName))
             {
-                AppVersionHandler.SetVersion(appName, 0);
+                AppVersionHandler.SetVersion(appName, INIT_VERSION);
                 Directory.CreateDirectory(GetAppDirectoryPath());
                 Directory.CreateDirectory(GetMasterRepoPath());
             }

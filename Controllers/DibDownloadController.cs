@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
 using System.IO;
 using System.IO.Compression;
 using web2.Data;
@@ -10,7 +9,7 @@ namespace web2.Controllers
     public class DibDownloadController : Controller
     {
         [HttpGet("{appName}")]
-        public IActionResult DownladRepo(string appName)
+        public IActionResult DownladMasterRepo(string appName)
         {
             AppDirectoryData appDirectoryData = new AppDirectoryData(appName);
             string appMasterRepoPath = appDirectoryData.GetMasterRepoPath();
@@ -37,7 +36,7 @@ namespace web2.Controllers
         }
 
         [HttpGet("{appName}/{version}")]
-        public IActionResult DownladRepo(string appName, int version)
+        public IActionResult DownladVersionRepo(string appName, int version)
         {
             AppDirectoryData appDirectoryData = new AppDirectoryData(appName);
             string appVersionRepoPath = appDirectoryData.GetVersionRepoPath(version);
@@ -49,12 +48,23 @@ namespace web2.Controllers
         }
 
         [HttpGet("{appName}/{targetVersion}/{clientVersion}")]
-        public IActionResult DownladRepo(string appName, int targetVersion, int clientVersion)
+        public IActionResult DownladUpdateToVersionRepo(string appName, int targetVersion, int clientVersion)
         {
             string repoZipName = $"{appName}.zip";
 
             UpdateDownloadBuilder updateDownloadBuilder = new UpdateDownloadBuilder();
             FileStream fileStream = updateDownloadBuilder.GetUpdatePack(appName, clientVersion, targetVersion);
+
+            return getResult(fileStream, repoZipName);
+        }
+
+        [HttpGet("{appName}/master/{clientVersion}")]
+        public IActionResult DownladUpdateToMasterRepo(string appName, int clientVersion)
+        {
+            string repoZipName = $"{appName}.zip";
+
+            UpdateDownloadBuilder updateDownloadBuilder = new UpdateDownloadBuilder();
+            FileStream fileStream = updateDownloadBuilder.GetUpdatePack(appName, clientVersion);
 
             return getResult(fileStream, repoZipName);
         }

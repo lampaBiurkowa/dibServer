@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,18 +32,19 @@ namespace web2.Controllers
             
             string appName = Path.GetFileNameWithoutExtension(formFile.FileName);
             AppDirectoryData appDirectoryData = new AppDirectoryData(appName);
+            appDirectoryData.IncreaseCurrentVersion();
+
             string filePath = appDirectoryData.GetAppDirectoryPath() + "/" + formFile.FileName;
             string dedicatedVersionRepoPath = appDirectoryData.GetCurrentVersionRepoPath();
             string masterRepoPath = appDirectoryData.GetMasterRepoPath();
 
             createRepo(dedicatedVersionRepoPath);
             saveUploadedRepoZip(formFile, filePath);
+            modifyDIBMDFile(AppVersionHandler.GetVersion(appName));
             extractRepoZip(filePath, dedicatedVersionRepoPath);
             clearRepo(masterRepoPath);
             extractRepoZip(filePath, masterRepoPath);
             removeCompressedFile(filePath);
-
-            appDirectoryData.IncreaseCurrentVersion();
         }
 
         void createRepo(string repoPath)
@@ -61,6 +64,19 @@ namespace web2.Controllers
         {
             using (FileStream stream = new FileStream(filePath, FileMode.Create))
                 formFile.CopyTo(stream);
+        }
+
+        [DllImport("DIBMDHandler.dll")]
+        static public extern IntPtr CreateDIBMDHandlerClass(string path);
+
+        [DllImport("DIBMDHandler.dll")]
+        static public extern int SetRepoVersion(IntPtr DIBMDHandlerObject, int version);
+
+        void modifyDIBMDFile(int version)
+        {
+            string pathToDIBMD = ".dib/.dibmd";
+            IntPtr DIBMDHandler = CreateDIBMDHandlerClass(pathToDIBMD);
+            SetRepoVersion(DIBMDHandler, version);
         }
 
         void extractRepoZip(string filePath, string directoryPath)
