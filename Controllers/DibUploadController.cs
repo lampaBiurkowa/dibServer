@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +16,12 @@ namespace web2.Controllers
             long size = files.Sum(f => f.Length);
 
             foreach (IFormFile formFile in files)
-                handleSingleFileUpload(formFile);
+                await handleSingleFileUpload(formFile);
 
             return Ok(new { count = files.Count, size });
         }
 
-        void handleSingleFileUpload(IFormFile formFile)
+        async Task handleSingleFileUpload(IFormFile formFile)
         {
             Uploader uploader = new Uploader();
             uploader.Upload(formFile);

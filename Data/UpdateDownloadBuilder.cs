@@ -145,7 +145,19 @@ namespace web2.Data
         void moveFilesToDownloadDirectory(List<string> paths, string sourceDirectoryPath)
         {
             foreach (string path in paths)
-                File.Copy($"{sourceDirectoryPath}/{path}", $"{getDownloadDirectoryPath()}/{path}");
+            {
+                string pathInDownloadDirectory = $"{getDownloadDirectoryPath()}/{path}";
+                createDirectoryFromPath(Path.GetFullPath(Path.GetDirectoryName(pathInDownloadDirectory)));
+                File.Copy($"{sourceDirectoryPath}/{path}", pathInDownloadDirectory);
+            }
+        }
+
+        void createDirectoryFromPath(string path)
+        {
+            if (!Directory.Exists(Path.GetDirectoryName(path)))
+                createDirectoryFromPath(Path.GetDirectoryName(path));
+
+            Directory.CreateDirectory(path);
         }
 
         void compressUpdatePack()

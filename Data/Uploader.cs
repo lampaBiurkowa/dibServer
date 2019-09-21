@@ -41,7 +41,7 @@ namespace web2.Data
         void clearRepo(string repoPath)
         {
             foreach (string filePath in Directory.GetFiles(repoPath))
-                System.IO.File.Delete(filePath);
+                File.Delete(filePath);
             foreach (string directoryPath in Directory.GetDirectories(repoPath))
                 Directory.Delete(directoryPath, true);
         }
