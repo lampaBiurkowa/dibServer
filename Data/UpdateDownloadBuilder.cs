@@ -9,7 +9,8 @@ namespace web2.Data
 {
     class UpdateDownloadBuilder
     {
-        const string DIBRM_FILE_NAME = ".dibrm";
+        const string DIB_DIRECTORY_RELATIVE_PATH = ".dib";
+        const string DIBRM_FILE_RELATIVE_PATH = DIB_DIRECTORY_RELATIVE_PATH + "/.dibrm";
 
         string appName;
         string clientRepoPath;
@@ -132,8 +133,14 @@ namespace web2.Data
 
         void createDIBRMFile(List<string> removedFilesPaths)
         {
-            string DIBRMFilePath = $"{getDownloadDirectoryPath()}/{DIBRM_FILE_NAME}";
+            createDIBDirectory();
+            string DIBRMFilePath = $"{getDownloadDirectoryPath()}/{DIBRM_FILE_RELATIVE_PATH}";
             File.WriteAllLines(DIBRMFilePath, removedFilesPaths);
+        }
+
+        void createDIBDirectory()
+        {
+            Directory.CreateDirectory($"{getDownloadDirectoryPath()}/{DIB_DIRECTORY_RELATIVE_PATH}");
         }
 
         void addFilesToSend(List<string> modifiedFilesPaths, List<string> newFilesPaths)
