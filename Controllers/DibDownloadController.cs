@@ -28,6 +28,7 @@ namespace web2.Controllers
 
         FileStream createZipInMemory(string repoPath, string repoZipPath)
         {
+            System.IO.File.Delete(repoZipPath);
             ZipFile.CreateFromDirectory(repoPath, repoZipPath);
             FileStream fileStream = new FileStream(repoZipPath, FileMode.Open, FileAccess.Read, FileShare.Delete);
             System.IO.File.Delete(repoZipPath);
