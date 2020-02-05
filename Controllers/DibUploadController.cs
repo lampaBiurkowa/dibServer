@@ -11,6 +11,7 @@ namespace web2.Controllers
     public class DibUploadController : Controller
     {
         [HttpPost]
+        [DisableRequestSizeLimit]
         public async Task<IActionResult> Post(List<IFormFile> files)
         {
             long size = files.Sum(f => f.Length);

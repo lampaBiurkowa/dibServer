@@ -44,7 +44,9 @@ namespace web2.Controllers
             string repoZipName = $"{appName}.zip";
             string repoZipPath = $"{AppDirectoryData.PATH_TO_APP_DOWNLOADS}/{repoZipName}";
 
+            System.Console.WriteLine("a");
             FileStream fileStream = createZipInMemory(appVersionRepoPath, repoZipPath);
+            System.Console.WriteLine("b");
             return getResult(fileStream, repoZipName);
         }
 

@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using System;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
 
 namespace web2.Data
 {
@@ -62,15 +60,9 @@ namespace web2.Data
         void modifyDIBMDFile(string repoPath, int version)
         {
             string path = $"{repoPath}/{RELATIVE_PATH_TO_DIBMD}"; 
-            IntPtr DIBMDHandler = CreateDIBMDHandlerClass(path);
-            SetRepoVersion(DIBMDHandler, version);
+            DIBMDHandler DIBMDHandler = new DIBMDHandler(path);
+            DIBMDHandler.SetVersion(version);
         }
-
-        [DllImport("DIBMDHandler.dll")]
-        static public extern IntPtr CreateDIBMDHandlerClass(string path);
-
-        [DllImport("DIBMDHandler.dll")]
-        static public extern int SetRepoVersion(IntPtr DIBMDHandlerObject, int version);
 
         void removeCompressedFile(string filePath)
         {
